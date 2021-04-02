@@ -1,0 +1,55 @@
+# Note: It requires docker-compose 1.13.0
+#
+# Usage: docker-compose up -d
+version: "2.2"
+
+networks:
+  default:
+    external:
+      name: mh-network
+services:
+  selenium_hub:
+    image: selenium/hub:3.14.0-curium
+    container_name: selenium_hub
+    ports:
+      - 4444:4444
+
+  appium:
+    build:
+      context: .
+      dockerfile: docker/AppiumDockerfile
+    container_name: appium
+    depends_on:
+      - selenium_hub
+    privileged: true
+    volumes:
+      - ./apps/apk:/root/tmp/sample_apk
+    env_file:
+     - ./.env
+    environment:
+      - CONNECT_TO_GRID=true
+      - APPIUM_HOST=appium
+      - SELENIUM_HOST=selenium_hub
+      - SELENIUM_PORT=4444
+    ports:
+      - 4723:4723
+
+  behave:
+    build:
+      context: .
+      dockerfile: docker/BehaveDockerfile
+    depends_on:
+      - selenium_hub
+      - appium
+    container_name: behave
+    privileged: true
+    volumes:
+      - .:/root/tmp/mh-tests
+    environment:
+      - CONNECT_TO_GRID=true
+      - SELENIUM_HOST=selenium_hub
+      - SELENIUM_PORT=4444
+      - APPIUM_HOST=appium
+      - APPIUM_PORT=4723
+    ports:
+      - 9333:9333

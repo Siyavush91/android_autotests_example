@@ -1,0 +1,7 @@
+FROM python:3.7-alpine
+RUN pip install behave
+RUN pip install Appium-Python-Client
+RUN pip install allure-behave
+EXPOSE 9333
+WORKDIR /root/tmp/mh-tests
+CMD tail -f /dev/null
